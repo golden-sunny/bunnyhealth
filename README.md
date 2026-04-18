@@ -50,12 +50,40 @@
 
 ---
 
-## 🚀 开发里程碑 (Milestones)
-- [ ] **Phase 1**: 完成数据库表结构设计与 API 文档定义。
-- [ ] **Phase 2**: 前端完成家园 UI 静态页面，后端跑通 AI 图片识别 Demo。
-- [ ] **Phase 3**: 前后端联调，打通“拍照 -> 识别 -> 宠物状态更新”核心链路。
-- [ ] **Phase 4**: 导入真实食堂数据，完成推荐系统。美术插画替换占位图。
-- [ ] **Phase 5**: 角色 3 进行全流程测试与 Bug 修复。
+## 🚀 开发里程碑与当前进度 (Progress)
+- [x] **Phase 1 (后端)**: 完成数据库表结构设计（含微量元素HP系统）。
+- [x] **Phase 1 (后端)**: 跑通核心 API（宠物状态查询、饮食结算 Mock 接口、智能食堂推荐接口）。
+- [x] **Phase 1 (数据)**: 编写 `seed_data.py` 插入了初始食堂菜品数据。
+- [ ] **Phase 2 (前端)**: 初始化 React 项目，打通后端 Mock API，渲染家园静态页面。
+- [ ] **Phase 2 (美术)**: 绘制并导出宠物多状态拆分图层（透明 PNG）。
+- [ ] **Phase 3 (AI)**: 接入真实大模型视觉 API（替换 Mock 逻辑）。
+
+---
+
+## 🔌 给前端开发者的接口说明 (API Definitions)
+目前后端服务运行在 `http://127.0.0.1:8000`。
+请通过访问 `http://127.0.0.1:8000/docs` 查看 Swagger 交互式文档。
+核心可用接口：
+1. **`POST /users/`**：创建一个测试用户和他的初始宠物（返回 `user_id`，测试请传 1）。
+2. **`GET /pets/{user_id}`**：获取宠物当前所有 HP（铁、钙、碘、维C、肥胖）以及 `active_diseases`（当前需要叠加的疾病图层）。
+3. **`POST /meals/analyze`**：【核心结算接口】传入 `user_id` 和 `food_name`（比如"炸鸡"或"沙拉"），后端会自动扣除或增加对应 HP，并返回最新的宠物状态。
+4. **`GET /pets/{user_id}/recommendations`**：【推荐接口】根据宠物当前最低的 HP 元素，智能从食堂图鉴中推荐对应的“治病”菜品。
+
+---
+
+## 🎨 给美术插画师的图层规范 (Art Assets Guide)
+为了支持宠物同时患有多种疾病（比如又胖又缺铁），请**务必采用图层叠加（Overlay）**的作画方式。所有图片请导出为**背景透明的 PNG**。
+
+*   **基础底层 (Base)**:
+    *   `base_baby.png` (健康幼崽)
+    *   `base_adult.png` (健康成年)
+*   **状态叠加层 (Decals / Overlays)** —— 前端会根据接口返回的 `layer_name` 直接叠加：
+    *   `fat_mild.png` / `fat_severe.png`：轻度/重度肥胖（可把宠物拉宽或加双下巴）。
+    *   `iron_mild.png` / `iron_severe.png`：缺铁（面色苍白 / 黑眼圈、极度疲劳）。
+    *   `calcium_mild.png` / `calcium_severe.png`：缺钙（腿部抽筋闪电符号 / 骨质软化拄拐杖）。
+    *   `iodine_mild.png` / `iodine_severe.png`：缺碘（脖子肿大 / 呆滞表情）。
+    *   `vit_c_mild.png` / `vit_c_severe.png`：缺维C（毛发脱落 / 牙龈出血创可贴）。
+    *   `dead_ghost.png`：死亡状态（幽灵或墓碑，直接替换基础层）。
 
 ---
 *Let's build a healthier lifestyle with your virtual pet!*

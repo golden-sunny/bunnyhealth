@@ -159,6 +159,60 @@ def analyze_meal(meal_req: MealRequest, db: Session = Depends(get_db)):
         }
     }
 
+@app.get("/pets/{user_id}/recommendations")
+def get_food_recommendations(user_id: int, db: Session = Depends(get_db)):
+    """根据宠物当前最缺乏的营养，从食堂图鉴中推荐食物"""
+    pet = db.query(models.Pet).filter(models.Pet.user_id == user_id).first()
+    if pet is None:
+        raise HTTPException(status_code=404, detail="Pet not found")
+
+    # 1. 找出宠物最缺的营养素 (HP最低的那个)
+    hp_dict = {
+        "iron": pet.iron_hp,
+        "calcium": pet.calcium_hp,
+        "iodine": pet.iodine_hp,
+        "vit_c": pet.vit_c_hp
+    }
+    
+    # 找到 HP 最低的一项
+    most_lacking_element = min(hp_dict, key=hp_dict.get)
+    lowest_hp = hp_dict[most_lacking_element]
+
+    # 如果所有 HP 都在 80 以上，说明很健康，随便推荐点低脂健康的
+    if lowest_hp >= 80:
+        recommendations = db.query(models.FoodDictionary)\
+            .filter(models.FoodDictionary.is_healthy_option == True)\
+            .order_by(models.FoodDictionary.calories.asc())\
+            .limit(2).all()
+        reason = "宠物目前非常健康！推荐一些低卡路里的轻食保持状态。"
+    
+    # 否则，针对性推荐（比如最缺铁，就按 iron_score 降序排）
+    else:
+        if most_lacking_element == "iron":
+            order_by_field = models.FoodDictionary.iron_score.desc()
+            reason = "宠物现在面色苍白，非常缺铁！建议去食堂吃这些补铁的食物："
+        elif most_lacking_element == "calcium":
+            order_by_field = models.FoodDictionary.calcium_score.desc()
+            reason = "宠物骨骼有些脆弱（缺钙）！建议去食堂吃这些高钙食物："
+        elif most_lacking_element == "iodine":
+            order_by_field = models.FoodDictionary.iodine_score.desc()
+            reason = "宠物缺乏碘元素！建议去食堂吃这些海产品："
+        else: # vit_c
+            order_by_field = models.FoodDictionary.vit_c_score.desc()
+            reason = "宠物缺乏维生素C！建议去食堂吃这些富含维C的食物："
+
+        recommendations = db.query(models.FoodDictionary)\
+            .filter(models.FoodDictionary.is_healthy_option == True)\
+            .order_by(order_by_field)\
+            .limit(2).all()
+
+    return {
+        "most_lacking_element": most_lacking_element,
+        "current_hp": lowest_hp,
+        "reasoning": reason,
+        "recommendations": recommendations
+    }
+
 @app.get("/pets/{user_id}")
 def read_pet(user_id: int, db: Session = Depends(get_db)):
     pet = db.query(models.Pet).filter(models.Pet.user_id == user_id).first()

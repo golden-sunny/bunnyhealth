@@ -41,13 +41,22 @@ class FoodDictionary(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True) # 如：香煎鸡胸肉
     ingredients = Column(String) # 主要原料
+    
+    # 宏量营养素
     calories = Column(Float)
     protein = Column(Float)
     fat = Column(Float)
     carbs = Column(Float)
-    vitamins = Column(String) # 如：VC, VA
+    
+    # 微量元素 (用于智能推荐，1-10分制，分数越高代表该元素越丰富)
+    iron_score = Column(Integer, default=0)    # 补铁评分
+    calcium_score = Column(Integer, default=0) # 补钙评分
+    iodine_score = Column(Integer, default=0)  # 补碘评分
+    vit_c_score = Column(Integer, default=0)   # 补维C评分
+    
     price = Column(Float)
     location = Column(String) # 如：一食堂二楼
+    is_healthy_option = Column(Boolean, default=True) # 是否是健康推荐菜
 
 class MealLog(Base):
     """用户餐饮记录（拍照上传的结果）"""
