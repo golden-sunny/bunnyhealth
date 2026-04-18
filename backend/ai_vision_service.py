@@ -94,6 +94,45 @@ def analyze_food_image_with_ai(image_base64: str) -> dict:
             "reasoning": "AI 分析失败，这是保底的默认数据。"
         }
 
+def analyze_craving_with_ai(craving_food: str) -> dict:
+    """
+    纯文本 AI 分析服务：
+    根据用户想吃的食物，推断身体缺乏的营养素。
+    """
+    system_prompt = """
+    你是一位顶级的营养学专家。用户会告诉你他们现在非常渴望（Craving）吃某种食物。
+    请你根据营养学常识，推断出他们身体最可能缺乏哪一种核心营养素（仅限：iron, calcium, iodine, vit_c）。
+    如果想吃高热量/油炸，通常选 calcium；想吃甜/冰，选 iron；想吃咸，选 iodine；想吃酸/辣/疲劳，选 vit_c。
+    
+    输出必须是合法的 JSON 格式，如下：
+    {
+      "lacking_element": "iron",  // 必须是 iron, calcium, iodine, vit_c 中的一个
+      "analysis_message": "你现在想吃这个，可能是因为..." // 一段有教育意义、友好的营养学解释（50字左右）
+    }
+    """
+    try:
+        model_name = os.getenv("LLM_MODEL_NAME", "gpt-4o")
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"我好想吃：{craving_food}"}
+            ],
+            max_tokens=200,
+            temperature=0.5
+        )
+        
+        raw_json_str = response.choices[0].message.content
+        clean_json_str = raw_json_str.strip().strip('`').removeprefix('json')
+        return json.loads(clean_json_str)
+        
+    except Exception as e:
+        print(f"AI 食欲分析失败: {e}")
+        return {
+            "lacking_element": "vit_c",
+            "analysis_message": "系统未能解析你的食欲，但补充维C总是没错的！"
+        }
+
 # ==========================================
 # 测试代码 (只有当你直接运行这个文件时才会执行)
 # ==========================================

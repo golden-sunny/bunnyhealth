@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 import models
+from ai_vision_service import analyze_craving_with_ai
 
 # 创建数据库所有表
 Base.metadata.create_all(bind=engine)
@@ -248,4 +249,39 @@ def read_pet(user_id: int, db: Session = Depends(get_db)):
     return {
         "pet": pet,
         "active_diseases": active_diseases
+    }
+
+class CravingRequest(BaseModel):
+    user_id: int
+    craving_food: str
+
+@app.post("/cravings/analyze")
+def analyze_craving(req: CravingRequest, db: Session = Depends(get_db)):
+    craving = req.craving_food.lower()
+    
+    # 真正调用 AI 大模型进行营养学反推！
+    ai_analysis = analyze_craving_with_ai(craving)
+    
+    lacking_element = ai_analysis.get("lacking_element", "vit_c")
+    analysis_msg = ai_analysis.get("analysis_message", "分析失败。")
+
+    # 根据推断出的缺乏元素，从食堂图鉴中找出最高评分的 2 道菜推荐给用户
+    if lacking_element == "iron":
+        order_by_field = models.FoodDictionary.iron_score.desc()
+    elif lacking_element == "calcium":
+        order_by_field = models.FoodDictionary.calcium_score.desc()
+    elif lacking_element == "iodine":
+        order_by_field = models.FoodDictionary.iodine_score.desc()
+    else:
+        order_by_field = models.FoodDictionary.vit_c_score.desc()
+
+    recommendations = db.query(models.FoodDictionary)\
+        .filter(models.FoodDictionary.is_healthy_option == True)\
+        .order_by(order_by_field)\
+        .limit(2).all()
+
+    return {
+        "lacking_element": lacking_element,
+        "analysis_msg": analysis_msg,
+        "recommendations": recommendations
     }
