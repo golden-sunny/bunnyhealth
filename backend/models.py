@@ -29,6 +29,7 @@ class Pet(Base):
     iron_hp = Column(Integer, default=100)  # 铁 (Fe)
     calcium_hp = Column(Integer, default=100) # 钙 (Ca)
     iodine_hp = Column(Integer, default=100)  # 碘 (I)
+    vit_a_hp = Column(Integer, default=100)   # 维A (Vit A)
     fiber_hp = Column(Integer, default=100)  # 膳食纤维
 
     exp = Column(Integer, default=0) # 经验值，健康饮食增加
@@ -54,6 +55,8 @@ class FoodDictionary(Base):
     calcium_score = Column(Integer, default=0) # 补钙评分
     iodine_score = Column(Integer, default=0)  # 补碘评分
     vit_c_score = Column(Integer, default=0)   # 补维C评分
+    vit_a_score = Column(Integer, default=0)   # 补维A评分
+    fiber_score = Column(Integer, default=0)   # 补膳食纤维评分
     
     price = Column(Float)
     location = Column(String) # 如：一食堂二楼

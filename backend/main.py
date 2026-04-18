@@ -21,6 +21,8 @@ def ensure_runtime_schema():
             row[1]
             for row in conn.execute(text("PRAGMA table_info(pets)")).fetchall()
         }
+        if "vit_a_hp" not in pet_columns:
+            conn.execute(text("ALTER TABLE pets ADD COLUMN vit_a_hp INTEGER DEFAULT 100"))
         if "fiber_hp" not in pet_columns:
             conn.execute(text("ALTER TABLE pets ADD COLUMN fiber_hp INTEGER DEFAULT 100"))
 
@@ -64,6 +66,8 @@ class FoodRequest(BaseModel):
     calcium_score: int = 0
     iodine_score: int = 0
     vit_c_score: int = 0
+    vit_a_score: int = 0
+    fiber_score: int = 0
     price: float
     location: str
     is_healthy_option: bool = True
@@ -75,6 +79,7 @@ NUTRIENT_LABELS = {
     "calcium": "钙",
     "iodine": "碘",
     "vit_c": "维C",
+    "vit_a": "维A",
     "fiber": "膳食纤维",
 }
 
@@ -231,6 +236,8 @@ def apply_pet_effects(pet: models.Pet, effects: dict):
     pet.calcium_hp = clamp_hp(pet.calcium_hp + effects.get("calcium", 0))
     pet.iodine_hp = clamp_hp(pet.iodine_hp + effects.get("iodine", 0))
     pet.vit_c_hp = clamp_hp(pet.vit_c_hp + effects.get("vit_c", 0))
+    if hasattr(pet, "vit_a_hp"):
+        pet.vit_a_hp = clamp_hp((getattr(pet, "vit_a_hp", 100) or 100) + effects.get("vit_a", 0))
     pet.fiber_hp = clamp_hp((getattr(pet, "fiber_hp", 100) or 100) + effects.get("fiber", 0))
 
 def get_or_create_stats(db: Session, user_id: int):
@@ -528,6 +535,7 @@ def calculate_overall_score(pet: models.Pet):
         pet.calcium_hp,
         pet.iodine_hp,
         pet.vit_c_hp,
+        getattr(pet, "vit_a_hp", 100) or 100,
         getattr(pet, "fiber_hp", 100) or 100,
         100 - pet.fat_level,
     ]
@@ -610,6 +618,7 @@ def build_pet_status(db: Session, pet: models.Pet, user_id: int):
         "calcium": pet.calcium_hp,
         "iodine": pet.iodine_hp,
         "vit_c": pet.vit_c_hp,
+        "vit_a": getattr(pet, "vit_a_hp", 100) or 100,
         "fiber": getattr(pet, "fiber_hp", 100) or 100,
     }
     attribute_items = [
@@ -685,6 +694,7 @@ def analyze_meal(meal_req: MealRequest, db: Session = Depends(get_db)):
                 "calcium": pet.calcium_hp,
                 "iodine": pet.iodine_hp,
                 "vit_c": pet.vit_c_hp,
+                "vit_a": getattr(pet, "vit_a_hp", 100) or 100,
                 "fiber": pet.fiber_hp,
             },
             "active_diseases": pet_status["active_diseases"],
@@ -703,6 +713,7 @@ def get_craving_advice(request: CravingAdviceRequest, db: Session = Depends(get_
         "calcium": pet.calcium_hp,
         "iodine": pet.iodine_hp,
         "vit_c": pet.vit_c_hp,
+        "vit_a": getattr(pet, "vit_a_hp", 100) or 100,
         "fiber": getattr(pet, "fiber_hp", 100) or 100,
         "active_diseases": calculate_disease_states(pet),
     }
@@ -726,6 +737,7 @@ def get_craving_advice(request: CravingAdviceRequest, db: Session = Depends(get_
                 "calcium": pet.calcium_hp,
                 "iodine": pet.iodine_hp,
                 "vit_c": pet.vit_c_hp,
+                "vit_a": getattr(pet, "vit_a_hp", 100) or 100,
                 "fiber": getattr(pet, "fiber_hp", 100) or 100,
             },
             "active_diseases": pet_context["active_diseases"],
@@ -876,6 +888,7 @@ def get_food_recommendations(user_id: int, db: Session = Depends(get_db)):
         "calcium": pet.calcium_hp,
         "iodine": pet.iodine_hp,
         "vit_c": pet.vit_c_hp,
+        "vit_a": getattr(pet, "vit_a_hp", 100) or 100,
         "fiber": getattr(pet, "fiber_hp", 100) or 100,
     }
     
@@ -903,8 +916,11 @@ def get_food_recommendations(user_id: int, db: Session = Depends(get_db)):
             order_by_field = models.FoodDictionary.iodine_score.desc()
             reason = "宠物缺乏碘元素！建议去食堂吃这些海产品："
         elif most_lacking_element == "fiber":
-            order_by_field = models.FoodDictionary.vit_c_score.desc()
+            order_by_field = models.FoodDictionary.fiber_score.desc()
             reason = "宠物缺乏膳食纤维！建议吃蔬菜、杂粮和菌菇类餐品："
+        elif most_lacking_element == "vit_a":
+            order_by_field = models.FoodDictionary.vit_a_score.desc()
+            reason = "宠物缺乏维A！建议吃深色蔬菜、胡萝卜或鸡蛋类餐品："
         else: # vit_c
             order_by_field = models.FoodDictionary.vit_c_score.desc()
             reason = "宠物缺乏维生素C！建议去食堂吃这些富含维C的食物："

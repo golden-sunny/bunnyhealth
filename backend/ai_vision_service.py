@@ -17,6 +17,7 @@ DEFAULT_HP_CHANGES = {
     "calcium": 0,
     "iodine": 0,
     "vit_c": 0,
+    "vit_a": 0,
     "fiber": 0,
 }
 
@@ -151,3 +152,19 @@ def analyze_food_image_with_ai(image_base64: str, text_hint: str = "") -> dict:
             "reasoning": "AI 识别失败，暂时使用兜底结果。",
         }
         return normalize_ai_result(fallback)
+
+
+def analyze_food_text_with_ai(food_name: str) -> dict:
+    """Compatibility wrapper for text-only food analysis."""
+    return normalize_ai_result({"food": food_name or "未知食物"}, food_name or "未知食物")
+
+
+def analyze_craving_with_ai(craving_food: str) -> dict:
+    """Compatibility wrapper for the older craving-analysis endpoint."""
+    craving = (craving_food or "").strip()
+    unhealthy_words = ["炸", "汉堡", "薯条", "奶茶", "甜品", "可乐"]
+    lacking_element = "vit_c" if any(word in craving for word in unhealthy_words) else "fiber"
+    return {
+        "lacking_element": lacking_element,
+        "analysis_message": "可以保留想吃的感觉，同时搭配蔬菜、水果或更完整的一餐来平衡。",
+    }
