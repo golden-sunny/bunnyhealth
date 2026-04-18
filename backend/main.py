@@ -21,6 +21,30 @@ class MealRequest(BaseModel):
     image_base64: str = None # 预留给前端传图片的字段
 
 # 用户测试接口
+class FoodRequest(BaseModel):
+    name: str
+    ingredients: str
+    calories: float
+    protein: float
+    fat: float
+    carbs: float
+    iron_score: int = 0
+    calcium_score: int = 0
+    iodine_score: int = 0
+    vit_c_score: int = 0
+    price: float
+    location: str
+    is_healthy_option: bool = True
+
+@app.post("/foods/")
+def create_food(food: FoodRequest, db: Session = Depends(get_db)):
+    """录入新的食堂菜品到图鉴中"""
+    db_food = models.FoodDictionary(**food.model_dump())
+    db.add(db_food)
+    db.commit()
+    db.refresh(db_food)
+    return {"message": "菜品录入成功", "food_id": db_food.id}
+
 @app.post("/users/")
 def create_user(username: str, target_calories: float, db: Session = Depends(get_db)):
     db_user = models.User(username=username, target_calories=target_calories)
