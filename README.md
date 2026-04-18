@@ -1,89 +1,118 @@
-# 🐰 BunnyHealth (健康饮食与电子宠物养成系统)
+# BunnyHealth
 
-## 📖 项目背景与目标 (Project Vision)
-本项目旨在通过**游戏化（Gamification）**的方式，帮助用户养成健康的饮食习惯。
-将“饮食健康追踪”与“电子宠物养成”结合。用户在网页上的饮食行为（尤其是食堂点餐）将直接影响网页首页“家园”中宠物的健康状态（成长、变胖、生病甚至死亡）。
+BunnyHealth 是一个把 AI 饮食识别和电子宠物养成结合起来的健康习惯项目。用户上传一餐食物照片后，系统会识别餐食、估算营养影响，并把饮食结果映射到小兔子的健康状态、房间氛围和每日任务里。
 
-**核心特色：**
-1. **多模态 AI 拍照识别**：用户上传餐食照片，大模型自动识别肉类、蔬菜、碳水，并估算是否满足营养需求。
-2. **智能欲望分析与食堂推荐**：用户输入想吃的“垃圾食品”，系统通过营养学推理（如想吃炸鸡可能是缺钙/脂肪酸），并结合预设的“食堂数据库”，推荐更健康的平替食物。
-3. **宠物状态机**：用户的饮食行为实时映射为宠物的 HP（健康值）、EXP（经验值）、Fat（肥胖度）和 Disease（疾病，如坏血病）。
+![BunnyHealth home preview](picture/healthhome.png)
 
----
+## 项目亮点
 
-## 👥 团队分工协作方案 (Team Roles & Workflow)
-本项目由 3 人团队协作完成，每个人负责不同的模块。**请团队成员的 AI 助手（如 Trae）根据当前使用者的角色，聚焦对应任务。**
+- AI 餐食识别：上传食物图片后，后端调用大模型返回菜品类型、健康判断和营养变化。
+- 宠物健康状态：饮食会影响健康值、脂肪负担、铁、钙、碘、维生素 C、膳食纤维等指标。
+- 情绪化反馈：宠物状态、房间背景和提示文案会随近期饮食记录变化。
+- 想吃建议：输入想吃的食物后，系统会给出更均衡的替代吃法和附近餐食建议。
+- 每日健康任务：完成喝水、散步、补充水果蔬菜等小任务后，可恢复宠物状态并收集事件。
 
-### 👨‍💻 角色 1：前端开发 (Frontend Developer)
-*   **职责**：负责所有用户界面的交互与呈现。
-*   **技术栈**：React / Next.js + Tailwind CSS.
-*   **核心任务**：
-    1.  开发登录页、基础体征录入页。
-    2.  开发核心“家园界面”：根据后端返回的宠物状态（stage, hp, fat_level, disease），加载对应的宠物插画素材。
-    3.  实现调用手机相册/摄像头的上传组件。
-    4.  展示 AI 营养分析结果面板和食堂推荐列表。
+## 技术栈
 
-### 👨‍💻 角色 2：后端开发与 AI 工程师 (Backend & AI Engineer)
-*   **职责**：负责业务逻辑、数据库设计与大模型对接。
-*   **技术栈**：Python + FastAPI + PostgreSQL (或 SQLite 测试用).
-*   **核心任务**：
-    1.  设计 `users`、`pets`、`food_dictionary` (食堂数据库)、`meal_logs` 等表结构。
-    2.  编写 API 接收前端图片，组装 Prompt 调用大模型（如 GPT-4o-mini 或 Qwen-VL），解析返回的 JSON 营养数据。
-    3.  实现“食欲分析 -> 营养学推理 -> 食堂数据库匹配”的推荐算法。
-    4.  维护宠物健康状态机逻辑（如：连续3天无维C -> 触发坏血病）。
+- Frontend: React, Vite, Tailwind CSS, Axios, React Router
+- Backend: FastAPI, SQLAlchemy, SQLite, Pydantic
+- AI: OpenAI-compatible Chat Completions API with vision input
 
-### 🎨 角色 3：美术插画、数据录入与测试工程师 (Illustrator, Data & QA)
-*   **职责**：负责视觉素材、基础数据准备与全链路质量保证。
-*   **核心任务**：
-    1.  **美术**：绘制宠物的多状态插画（幼崽、健康成年、肥胖版、坏血病版、死亡版等），导出为透明 PNG/SVG 供前端使用。
-    2.  **数据**：收集食堂/周边餐厅菜单（包含菜名、主要原料、大概价格、位置），整理为 CSV/Excel，供后端导入 `food_dictionary` 表。
-    3.  **测试**：在项目集成阶段，模拟用户上传各类食物图片，测试 AI 识别准确率及宠物状态变化是否符合预期，并将 Bug 反馈给开发。
+## 项目结构
 
----
+```text
+bunnyhealth/
+├── backend/
+│   ├── main.py                 # FastAPI API routes and game logic
+│   ├── models.py               # SQLAlchemy models
+│   ├── database.py             # SQLite connection
+│   ├── ai_vision_service.py    # Food image recognition service
+│   ├── food_advice_service.py  # Craving and menu advice service
+│   ├── seed_data.py            # Demo cafeteria data
+│   └── requirements.txt
+├── picture/                    # Pet and room image assets
+├── src/                        # React app
+├── vite.config.js              # Frontend dev proxy to FastAPI
+└── package.json
+```
 
-## 🤖 致 Trae (AI 助手) 的特别指令
-如果当前阅读此文档的是 Trae 或其他 AI 编程助手，请遵循以下原则协助你的开发者：
-1. **明确当前角色**：在开始编写代码前，请询问或确认当前使用者属于上述 3 个角色中的哪一个，并仅提供该角色负责领域的代码建议。
-2. **遵循技术栈**：严格按照本项目规定的技术栈（React + FastAPI）提供代码。
-3. **接口优先**：在前后端并行开发时，优先协助开发者定义和 mock API 接口（JSON 格式）。
-4. **保持沟通**：当遇到需要其他角色配合的地方（例如前端需要后端的接口字段，后端需要前端的图片 Base64 格式），请提醒使用者与团队沟通。
+## 本地运行
 
----
+### 1. 启动后端
 
-## 🚀 开发里程碑与当前进度 (Progress)
-- [x] **Phase 1 (后端)**: 完成数据库表结构设计（含微量元素HP系统）。
-- [x] **Phase 1 (后端)**: 跑通核心 API（宠物状态查询、饮食结算 Mock 接口、智能食堂推荐接口）。
-- [x] **Phase 1 (数据)**: 编写 `seed_data.py` 插入了初始食堂菜品数据。
-- [ ] **Phase 2 (前端)**: 初始化 React 项目，打通后端 Mock API，渲染家园静态页面。
-- [ ] **Phase 2 (美术)**: 绘制并导出宠物多状态拆分图层（透明 PNG）。
-- [ ] **Phase 3 (AI)**: 接入真实大模型视觉 API（替换 Mock 逻辑）。
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+python seed_data.py
+uvicorn main:app --reload
+```
 
----
+后端默认运行在 `http://127.0.0.1:8000`，接口文档在 `http://127.0.0.1:8000/docs`。
 
-## 🔌 给前端开发者的接口说明 (API Definitions)
-目前后端服务运行在 `http://127.0.0.1:8000`。
-请通过访问 `http://127.0.0.1:8000/docs` 查看 Swagger 交互式文档。
-核心可用接口：
-1. **`POST /users/`**：创建一个测试用户和他的初始宠物（返回 `user_id`，测试请传 1）。
-2. **`GET /pets/{user_id}`**：获取宠物当前所有 HP（铁、钙、碘、维C、肥胖）以及 `active_diseases`（当前需要叠加的疾病图层）。
-3. **`POST /meals/analyze`**：【核心结算接口】传入 `user_id` 和 `food_name`（比如"炸鸡"或"沙拉"），后端会自动扣除或增加对应 HP，并返回最新的宠物状态。
-4. **`GET /pets/{user_id}/recommendations`**：【推荐接口】根据宠物当前最低的 HP 元素，智能从食堂图鉴中推荐对应的“治病”菜品。
+如果要启用真实 AI 识别，请在 `backend/.env` 中配置：
 
----
+```env
+OPENAI_API_KEY=your_api_key_here
+OPENAI_BASE_URL=https://api.openai.com/v1
+LLM_MODEL_NAME=gpt-4o
+```
 
-## 🎨 给美术插画师的图层规范 (Art Assets Guide)
-为了支持宠物同时患有多种疾病（比如又胖又缺铁），请**务必采用图层叠加（Overlay）**的作画方式。所有图片请导出为**背景透明的 PNG**。
+未配置或调用失败时，项目会使用兜底逻辑，方便本地演示。
 
-*   **基础底层 (Base)**:
-    *   `base_baby.png` (健康幼崽)
-    *   `base_adult.png` (健康成年)
-*   **状态叠加层 (Decals / Overlays)** —— 前端会根据接口返回的 `layer_name` 直接叠加：
-    *   `fat_mild.png` / `fat_severe.png`：轻度/重度肥胖（可把宠物拉宽或加双下巴）。
-    *   `iron_mild.png` / `iron_severe.png`：缺铁（面色苍白 / 黑眼圈、极度疲劳）。
-    *   `calcium_mild.png` / `calcium_severe.png`：缺钙（腿部抽筋闪电符号 / 骨质软化拄拐杖）。
-    *   `iodine_mild.png` / `iodine_severe.png`：缺碘（脖子肿大 / 呆滞表情）。
-    *   `vit_c_mild.png` / `vit_c_severe.png`：缺维C（毛发脱落 / 牙龈出血创可贴）。
-    *   `dead_ghost.png`：死亡状态（幽灵或墓碑，直接替换基础层）。
+### 2. 启动前端
 
----
-*Let's build a healthier lifestyle with your virtual pet!*
+在另一个终端中运行：
+
+```powershell
+npm install
+npm run dev
+```
+
+前端默认运行在 `http://127.0.0.1:3000`。开发环境下，`/api` 请求会通过 Vite 代理到 FastAPI 后端。
+
+## 可演示功能
+
+1. 打开首页，给小兔子命名。
+2. 上传一张餐食图片，查看识别结果和宠物状态变化。
+3. 打开“想吃什么”面板，输入炸鸡、奶茶、番茄牛腩饭等食物，查看替代建议。
+4. 查看宠物状态面板，观察房间、宠物和营养指标变化。
+5. 完成每日健康任务，收集随机事件。
+
+## API 摘要
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/meals/analyze` | 分析餐食图片或食物名称，并更新宠物状态 |
+| `POST` | `/cravings/advice` | 根据想吃的食物生成健康替代建议 |
+| `GET` | `/pets/{user_id}/status` | 获取宠物、房间、营养指标和近期饮食记录 |
+| `PATCH` | `/pets/{user_id}/name` | 修改宠物名称 |
+| `GET` | `/health-tasks/{user_id}/today` | 获取当天健康任务 |
+| `POST` | `/health-tasks/complete` | 完成健康任务并更新宠物状态 |
+| `GET` | `/events/{user_id}` | 获取事件收集图鉴 |
+
+## GitHub 展示建议
+
+这个仓库已经忽略了本地依赖、构建产物、数据库、缓存文件和真实环境变量。上传到 GitHub 时请只提交源码、图片素材、依赖清单、README 和 `.env.example`。
+
+不要提交：
+
+- `node_modules/`
+- `dist/`
+- `backend/.env`
+- `backend/*.db`
+- `backend/__pycache__/`
+- `*.zip`
+- 解压出来的临时项目副本
+
+## 当前状态
+
+- 前端生产构建通过。
+- 后端 Python 文件语法检查通过。
+- SQLite 数据库会在本地运行时生成，不需要随仓库提交。
+
+## 作者
+
+Made as a first portfolio project by Silver12523.
